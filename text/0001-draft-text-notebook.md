@@ -49,6 +49,7 @@ We will calculate the following metrics in Seismometer when loading the dataset.
 * Suggested reply and actual reply edit distance using several methods bucketed into thresholds
     * [Levenshtein](https://en.wikipedia.org/wiki/Levenshtein_distance) word level
     * [Jaccard](https://en.wikipedia.org/wiki/Jaccard_index) unique words
+* Similarity based on edit distance between draft and actual
 * Message reading level using [Flesch-Kincaid](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests)
 * Message language differs from sender preferred language
 * Message language not in replier languages understood
