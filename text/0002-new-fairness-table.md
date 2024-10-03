@@ -6,7 +6,7 @@
 # Summary
 [summary]: #summary
 
-Aequitas uses altair plots to display information, and when hosted in a notebook this causes a number of awkward issues to code around (loading in a frame, loading in vscode, etc). In addition, when there are many different cohort splits that need to be evaluated, the horizontal nature of the table leads to a difficult to read table. 
+[Aequitas](https://github.com/dssg/aequitas) uses altair plots to display information, and when hosted in a notebook this causes a number of awkward issues to code around (loading in a frame, loading in vscode, etc). In addition, when there are many different cohort splits that need to be evaluated, the horizontal nature of the table leads to a difficult to read table. 
 
 # Motivation
 [motivation]: #motivation
@@ -20,15 +20,20 @@ Working with Aequitas's current fairness audit bring in additional complexity an
 
 * Explain the design in enough detail that somebody familiar with the area would understand it and somebody familiar with the code could implement it.
 
-Rather than levering aequitas, we will use great_tables to display a list of computed metrics, as well as the percentage disparity between the a default cohort (the largets subgroup for a chort category) and each other cohort value (excepting any cohort that falls below the censoring threshold). 
+Rather than leveraging [aequitas](https://github.com/dssg/aequitas), we will use [great_tables](https://github.com/posit-dev/great-tables) to display a list of computed metrics, as well as the percentage disparity between the a default cohort (the largest subgroup for each chort category) and every other cohort value (excepting any cohort that falls below the censoring threshold).
 
 An example table for custom metrics would look like
 
 ![Fairness table for GenAI use case](fairness_genai.png)
 
-We will have out of the box support for Binary Classifiers, including common existing metrics (false positive rate, accuracy, ppv, etc), that are computed based on a model threshold. This will enables us to drop support for aequitas while maintaining the same functionality.
+We will have out of the box support for Binary Classifiers, including common existing metrics (false positive rate, accuracy, ppv, etc), that are computed based on a model threshold. As a result we can drop support for aequitas while maintaining the same functionality.
 
-### TODO add screenshot for BINARY CLASSIFIER
+![Fairness Options for Binary Classifier](fairness_header_binary_classifier.png)
+
+The output table will be consistent across any model/model metrics, giving a common framework for looking at results at a glance.  There will be a legend to inform people of the iconography used.
+
+![Fairness Table for Binary Classier](fairness_table_binary_classifier.png)
+
 
 ## Custom Metric API
 
@@ -36,7 +41,7 @@ We will also support the creation of custom metrics that are not threshold depen
 
 ```python
 import pandas as pd
-from seismometer.data import MetricFunctions
+from seismometer.data.performance import MetricGenerator
 from random import random
 
 def create_random_realistic_metrics(data: pd.DataFrame, **kwargs):
@@ -48,19 +53,20 @@ def create_random_realistic_metrics(data: pd.DataFrame, **kwargs):
             "Reading Level": 7 + 2*random(),
            }
 
-fake_metrics = MetricFunctions(["Readability", "Message Length", "Reading Level",] create_random_realistic_metrics)
+fake_metrics = MetricGenerator(["Readability", "Message Length", "Reading Level",] create_random_realistic_metrics)
 ```
 
-The `MetricFuctions` class is a wrapper that defines a list of metrics, and can take an input dataframe (and additional kwargs) to generate those metrics. The kwargs allows passing in additional data like model thresholds or score/target descriptors which may be appropriate for some models, but not others. 
+The `MetricGenerator` class is just a wrapper that defines a list of metrics, and the callable that will generate those metrics from an input dataframe (and any additional required kwargs). The kwargs allows passing in additional data like model thresholds or score/target descriptors which may be appropriate for some models (binary classifiers), but not others. 
 
 When included as part of an Explore control, the controls header will looke like this:
 
 ![Explore control header for non-threshold metrics](fairness_header_non_binary_classifier.png)
 
-## Metrics
+## Binary Classifier Metrics
+
 For binary classifiers, we already calculate many of the base metrics that we want to compare:
 
-```["TP", "FP", "TN", "FN", "Accuracy", "Sensitivity","Specificity", "PPV", "NPV", "Flagged", "LR+", "NetBenefitScore",
+```["TP", "FP", "TN", "FN", "Accuracy", "Sensitivity","Specificity", "PPV", "NPV", "Flagged", "LR+", "NetBenefitScore","NNT@0.33"
 ]```
 
 Our current implmentation supports the following from `aequitas` - [fairness metrics](https://github.com/dssg/aequitas?tab=readme-ov-file#fairness-metrics): 
@@ -69,11 +75,11 @@ Our current implmentation supports the following from `aequitas` - [fairness met
 ["tpr", "tnr", "for", "fdr", "fpr", "fnr", "npv", "ppr", "precision", "pprev"]
 ```
 
-So we will extend our existing metrics to indclude these combinations.
+Many of these defintiions are calculated at the group level, we we will extend `seismomemter.data.performance.calculate_bin_stats` to indclude these combinations. 
 
 
 ## Changes to Seismometer Dependencies
-We will remove our current dependency on [aequitas](https://github.com/dssg/aequitas) and add a dependency to [great_tables](https://github.com/posit-dev/great-tables). The new dependency is for ease of styling the new fairness table. 
+We will remove our current dependency on [aequitas](https://github.com/dssg/aequitas) and add a dependency to [great_tables](https://github.com/posit-dev/great-tables). The new dependency is for ease of styling the new fairness table. This also lets us take advantage of updates to `great_tables` for some common styling options in the future (collapsible row groups for example).
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
