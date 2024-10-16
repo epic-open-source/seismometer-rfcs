@@ -19,34 +19,51 @@ We want seismometer to support gen AI metrics and the proposed preference metric
 
 We will add some new data elements to our current usage configuration and data dictionary to add additional alignment with our mental model of decoupling what the data is from how it is used. 
  
-For usage config, we will add a metrics section similar to cohorts. It will be used to denote which source features are metrics that need to be ingested into seismometer and what the treatment of the metrics will be. The treatment of the metrics will be called metric_type and we will initially support binary_classification and add support for ordinal_categorical. We will also support a metric_details subkey that will be used to provide metric level details. This could include how to handle N/As or binning strategies. For backwards compatibility reasons, we will use the current logic if the new section is not present. We will also add a group key that will be used to further partition the metrics into distinct sections. This is intended to separate user feedback from evaluated metrics.
- 
-Usage Config Update Example:
+For usage config, we will add a metrics section similar to cohorts. It will be used to denote which source features are metrics that need to be ingested into seismometer and what the treatment of the metrics will be. The treatment of the metrics will be called metric_type and we will initially support `binary_classification` and add support for `ordinal_categorical`. We will also support a `metric_details` subkey that will be used to provide metric level details (depending on type). This could include how to handle N/As or binning strategies. For backwards compatibility reasons, entires in `outputs` will be treated like `binary_classification` metrics. We will also add a `group_key` that can be used to further partition the metrics into distinct sections. For example, to separate user feedback from evaluated metrics.
+
+Usage Config UPdate Example - Binary Classifier:
+
+```yml
+metrics:
+    - source: Risk30DayReadmission
+      display_name: Risk of Readmission within 30 Days
+      metric_type: binary_classification
+      group_key: Readmission Scores
+    - source: RiskAnyReadmission
+      display_name: Risk of Any Readmission (0-100)
+      metric_type: binary_classification
+      group_key: Readmission Scores
+      metric_details:
+        min: 0.0
+        max: 100.0
 ```
+
+Usage Config Update Example - Non-Binary Classifier:
+```yml
 metrics:
     - source: LikertA
       display_name: Likert A
       metric_type: ordinal_categorical
       metric_details:
-       - combine_na_and_middle_values: true
+        combine_na_and_middle_values: true
       group_key: LLM-as-a-judge
     - source: LikertB
       display_name: Likert B
       metric_type: ordinal_categorical
       metric_details:
-       - combine_na_and_middle_values: true
+        combine_na_and_middle_values: true
       group_key: LLM-as-a-judge
     - source: LikertC
       display_name: Likert C
       metric_type: ordinal_categorical
       metric_details:
-       - combine_na_and_middle_values: true
+        combine_na_and_middle_values: true
       group_key: LLM-as-a-judge
     - source: LikertD
       display_name: Likert D
       metric_type: ordinal_categorical
       metric_details:
-       - combine_na_and_middle_values: true
+        combine_na_and_middle_values: true
       group_key: LLM-as-a-judge
     - source: UserFeedback
       display_name: User Feedback
@@ -54,13 +71,26 @@ metrics:
       group_key: User Feedback
 ``` 
 
+It should be easy to extend this feature to other types of metrics, for example we could support `regression` models with something like
+
+
+```yml
+metrics:
+    - source: ExpectedHospitalStay
+      display_name: Risk of Readmission within 30 Days
+      metric_type: regression
+      group_key: Length of Stay Scores
+
+```
+
 We will also update the data dictionary to contain categorical value display names and assume the order of values is in the proper sequence.
  
-The explore controls will be updated to accept an optional group_key that will filter which metrics they will attempt to display.
+The explore controls will be updated to accept an optional `group_key` that will filter which metrics they will attempt to display. Explore controls that expect a `metric_type` will also use that to filter metrics used. We will also add `group_key` to Events to allow for similar filtering.
 
 Notebook Explore Specialization Example:
+
 ```
-OrdinalCategoricalWidget(group_key="Rubric metrics")
+ExploreOrdinalCategoricalMetrics(group_key="Rubric metrics")
 ```
 
 We will also create a new set of ordinal categorical visualizations. The [plot-likert](https://github.com/nmalkin/plot-likert) package was used as a proof of concept and while it was fit for this purpose, it was not flexible enough about input data format to fit our needs. Our resultant visualizations will likely look similar to it but better support our themes and integration with the cohorting features. 
