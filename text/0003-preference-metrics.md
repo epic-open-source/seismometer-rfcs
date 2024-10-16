@@ -63,7 +63,9 @@ Notebook Explore Specialization Example:
 OrdinalCategoricalWidget(group_key="Rubric metrics")
 ```
 
-We will also create a new set of ordinal categorical visualizations. The [plot-likert](https://github.com/nmalkin/plot-likert) package was used as a proof of concept and while it was fit for this purpose, it was not flexible enough about input data format to fit our needs. Our resultant visualizations will likely look similar to it but better support our themes and integration with the cohorting features. See a mockup in 0003/ordinal_categorical.png
+We will also create a new set of ordinal categorical visualizations. The [plot-likert](https://github.com/nmalkin/plot-likert) package was used as a proof of concept and while it was fit for this purpose, it was not flexible enough about input data format to fit our needs. Our resultant visualizations will likely look similar to it but better support our themes and integration with the cohorting features. 
+
+![Ordinal Categorical Mockup](0003/ordinal_categorical.png)
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
